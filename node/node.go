@@ -32,6 +32,8 @@ import (
 	"strings"
 	"sync"
 
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"github.com/ShyftNetwork/go-empyrean/accounts"
 	"github.com/ShyftNetwork/go-empyrean/common/hexutil"
 	"github.com/ShyftNetwork/go-empyrean/ethdb"
@@ -284,26 +286,24 @@ func (n *Node) setUpWhisperSubscriptions() error {
 				case err := <-sub.Err():
 					log.Error("subscription error:", err)
 				case message := <-messages:
-					// WE NEED TO ADD SECURITY HERE ie. CHECK SIGNATURE OF PAYLOAD
-					blockhash, signature := parseMessage(string(message.Payload[:]))
-					bar := []byte(blockhash)
-					hashBlockhash, _ := core.SignHash(bar)
-					rpk, err := crypto.Ecrecover(hashBlockhash, hexutil.Bytes(signature))
+					blockHash, sig := parseMessage(string(message.Payload[:]))
+					sigByteArray, _ := hexutil.Decode(sig)
+					var sighex = hexutil.Bytes(sigByteArray)
+					sighex[64] -= 27
+					msgHash, _ := core.SignHash(hexutil.Bytes(blockHash))
+					rpk, err := crypto.Ecrecover(hexutil.Bytes(msgHash), sighex)
 					if err != nil {
 						log.Error("Error in EcRecover", err)
 					}
-					pubKey, err := crypto.DecompressPubkey(rpk)
-					if err != nil {
-						log.Error("Error in Decompress", err)
+					x, y := elliptic.Unmarshal(crypto.S256(), rpk)
+					recoveredAddr := crypto.PubkeyToAddress(ecdsa.PublicKey{Curve: crypto.S256(), X: x, Y: y})
+					stringAddr := recoveredAddr.Hex()
+					for _, authorizedSigner := range n.config.WhisperKeys {
+						// is valid signer
+						if authorizedSigner == stringAddr {
+							whispChan <- blockHash
+						}
 					}
-					recoveredAddr := crypto.PubkeyToAddress(*pubKey)
-					for k := range n.config.WhisperKeys {
-						fmt.Println(k)
-						log.Info("Whisper Keys", "WhisperKeys", n.config.WhisperKeys)
-					}
-					fmt.Println("Client connected with address :", recoveredAddr.Hex())
-					whispChan <- string(message.Payload)
-					fmt.Printf(string(message.Payload)) // "Hello"
 				}
 			}
 		}()
