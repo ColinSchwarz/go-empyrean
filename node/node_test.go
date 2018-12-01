@@ -27,6 +27,7 @@ import (
 	"github.com/ShyftNetwork/go-empyrean/crypto"
 	"github.com/ShyftNetwork/go-empyrean/p2p"
 	"github.com/ShyftNetwork/go-empyrean/rpc"
+	whisper "github.com/ShyftNetwork/go-empyrean/whisper/whisperv6"
 )
 
 var (
@@ -572,4 +573,47 @@ func TestAPIGather(t *testing.T) {
 			t.Fatalf("test %d: rpc execution timeout", i)
 		}
 	}
+}
+
+// for stubbing purposes
+type TestType struct {
+	str string
+}
+
+func (sub *TestType) Unsubscribe() {
+	// stub
+}
+
+func (sub *TestType) Err() <-chan error {
+	return make(chan error, 1)
+}
+
+func TestWhisperChannels(t *testing.T) {
+	var sub *TestType = &TestType{"foo"}
+	//messages := make(chan *whisper.Message)
+	messages := make(chan *whisper.Message)
+	whisperChannel := make(chan string)
+	testAddr := "0x7dA99dF96259305Ee38c9fA9E9D551118B12eC3b"
+	whisperKeys := []string{testAddr}
+	go goRoutine(sub, messages, whisperChannel, whisperKeys)
+	msg := &whisper.Message{
+		Payload: []byte("Here is a string--string2"),
+	}
+	msg2 := &whisper.Message{
+		Payload: []byte("notablockhash--0x5944a150e7cc2d77cd47d94dfe7665c7921768d4eb8a1479026751e7574e70d37a8b5ba5ec55111572ea30a9c9d9504efebdd8311b7b6bad05c4fd48e51bd3841c"),
+	}
+	messages <- msg
+	resp := <-whisperChannel
+	if "hex string without 0x prefix" != resp {
+		t.Errorf("test %d: result mismatch: have %s, want %s", "hex string without 0x prefix", resp)
+	}
+	t.Log(resp)
+
+	messages <- msg2
+	resp = <-whisperChannel
+	if testAddr != resp {
+		t.Errorf("test %d: result mismatch: have %s, want %s", resp, testAddr)
+	}
+	t.Log("resp is ", resp)
+
 }
