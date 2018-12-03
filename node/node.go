@@ -263,7 +263,7 @@ func (n *Node) Start() error {
 			log.Error("subscription error:", err)
 		}
 		log.Info("listening for messages", "topicString", topicString)
-		go goRoutine(sub, messages, n.config.WhisperChannel, n.config.WhisperKeys)
+		go goRoutine(sub, messages, n.config.WhisperChannel, func() []string {return n.config.WhisperKeys})
 	}
 	return nil
 }
@@ -291,7 +291,7 @@ func pos(slice []string, address string) int {
 	return -1
 }
 
-func goRoutine(sub ethereum.Subscription, messages chan *whisper.Message, whispChan chan string, whisperKeys []string) {
+func goRoutine(sub ethereum.Subscription, messages chan *whisper.Message, whispChan chan string, whisperKeys func() []string) {
 	for {
 		select {
 		case err := <-sub.Err():
@@ -318,7 +318,7 @@ func goRoutine(sub ethereum.Subscription, messages chan *whisper.Message, whispC
 			recoveredAddr := crypto.PubkeyToAddress(ecdsa.PublicKey{Curve: crypto.S256(), X: x, Y: y})
 			stringAddr := recoveredAddr.Hex()
 			fmt.Println("get herer?")
-			pos := pos(whisperKeys, stringAddr)
+			pos := pos(whisperKeys(), stringAddr)
 			if pos == -1 {
 				whispChan <- "UNAUTHORIZED SIGNER"
 			} else {
