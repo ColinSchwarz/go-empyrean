@@ -372,15 +372,13 @@ func whisperMessageReceiver(sub ethereum.Subscription, messages chan *whisperv6.
 		case err := <-sub.Err():
 			log.Error("subscription error:", err)
 		case message := <-messages:
-			// get WhisperPulic Keys from either
+			// get eth public keys from message
 			blockHash, sig := parseMessage(string(message.Payload[:]))
 			sigByteArray, err := hexutil.Decode(sig)
 			if err != nil {
 				log.Error("hexutil.Decode err", "err", err)
-				// whispChan <- err.Error()
 				break
 			}
-			fmt.Println("AR")
 			var sighex = hexutil.Bytes(sigByteArray)
 			sighex[64] -= 27
 			msgHash, _ := core.SignHash(hexutil.Bytes(blockHash))

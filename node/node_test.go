@@ -24,6 +24,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ShyftNetwork/go-empyrean/common"
 	"github.com/ShyftNetwork/go-empyrean/crypto"
 	"github.com/ShyftNetwork/go-empyrean/p2p"
 	"github.com/ShyftNetwork/go-empyrean/rpc"
@@ -590,60 +591,27 @@ func (sub *TestType) Err() <-chan error {
 
 func TestWhisperChannels(t *testing.T) {
 	var sub *TestType = &TestType{"foo"}
-	//messages := make(chan *whisper.Message)
 	messages := make(chan *whisper.Message)
 	whisperChannel := make(chan string)
+
+	// signer of the test messages
 	testAddrA := "0x7dA99dF96259305Ee38c9fA9E9D551118B12eC3b"
-	//whisperKeys := []string{testAddr}
-	//whisperKeys := testAddr
-	go whisperMessageReceiver(sub, messages, whisperChannel, func(testAddr string) bool {
-		if testAddrA == testAddr {
+
+	go whisperMessageReceiver(sub, messages, whisperChannel, func(testAddr common.Address) bool {
+		if common.HexToAddress(testAddrA) == testAddr {
 			return true
 		}
 		return false
 	})
+
 	msg := &whisper.Message{
-		// nonsense values
-		Payload: []byte("Here is a string--string2"),
-	}
-	msg2 := &whisper.Message{
 		// valid signature for "notablockhash" for the testAddr
 		Payload: []byte("notablockhash--0x5944a150e7cc2d77cd47d94dfe7665c7921768d4eb8a1479026751e7574e70d37a8b5ba5ec55111572ea30a9c9d9504efebdd8311b7b6bad05c4fd48e51bd3841c"),
 	}
 
-	msg3 := &whisper.Message{
-		// invalid signature, IE not an actual signature
-		Payload: []byte("notablockhash--0x5944a150e7cc2d77cd47d94dfe7665c7921768d4eb8a1479026751e7574e70d37a8b5ba5ec55111572ea30a9c9d9504efebdd8311b7b6bad05c4fd48e51bd3841e"),
-	}
-
-	msg4 := &whisper.Message{
-		// valid signature but not an authorized signer
-		Payload: []byte("notablockhash--0xe04ae35c9dea3000b1378e3f973d143981f16f25f3a779fd708d3e69ab2c7eae7d257ed9fd47ef9e202c11bf5b4348d75bc82b3bbf602919ecc6fb3fd5541e6e1b"),
-	}
-
 	messages <- msg
 	resp := <-whisperChannel
-	if "hex string without 0x prefix" != resp {
-		t.Errorf("result mismatch: have %s, want %s", "hex string without 0x prefix", resp)
-	}
-
-	messages <- msg2
-	resp = <-whisperChannel
 	if testAddrA != resp {
 		t.Errorf("result mismatch: have %s, want %s", resp, testAddrA)
-	}
-
-	messages <- msg3
-	resp = <-whisperChannel
-
-	if "recovery failed" != resp {
-		t.Errorf("result mismatch: have %s, want %s", resp, "recovery failed")
-	}
-
-	messages <- msg4
-	resp = <-whisperChannel
-
-	if "UNAUTHORIZED SIGNER" != resp {
-		t.Errorf("result mismatch: have %s, want %s", resp, "UNAUTHORIZED SIGNER")
 	}
 }
