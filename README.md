@@ -100,9 +100,8 @@ Steps for regenerating are as follows:
 1. Generate the abi for the subject contract and save it at ./generated_bindings/contract_abis/whispersigner_abi.json.
 
 2. Run the following command to regenerate the contract bindings:
- 
-    ./build/bin/abigen -abi generated_bindings/contract_abis/whispersigner_abi.json \
-    --pkg shyft_contracts --type Signer --out generated_bindings/whisper_signer_binding.go
+
+./build/bin/abigen  --sol shyft-cli/web3/validSignersDeploy/ValidSigners.sol  --pkg shyft_contracts --out generated_bindings/whisper_signer_binding.go
 
 ```
 
