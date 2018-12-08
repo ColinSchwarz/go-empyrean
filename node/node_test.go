@@ -24,8 +24,14 @@ import (
 	"testing"
 	"time"
 
+	"math/big"
+
+	"github.com/ShyftNetwork/go-empyrean/accounts/abi/bind"
+	"github.com/ShyftNetwork/go-empyrean/accounts/abi/bind/backends"
 	"github.com/ShyftNetwork/go-empyrean/common"
+	"github.com/ShyftNetwork/go-empyrean/core"
 	"github.com/ShyftNetwork/go-empyrean/crypto"
+	"github.com/ShyftNetwork/go-empyrean/generated_bindings"
 	"github.com/ShyftNetwork/go-empyrean/p2p"
 	"github.com/ShyftNetwork/go-empyrean/rpc"
 	whisper "github.com/ShyftNetwork/go-empyrean/whisper/whisperv6"
@@ -613,5 +619,26 @@ func TestWhisperChannels(t *testing.T) {
 	resp := <-whisperChannel
 	if testAddrA != resp {
 		t.Errorf("result mismatch: have %s, want %s", resp, testAddrA)
+	}
+}
+
+func TestCheckContractAdminStatus(t *testing.T) {
+	key0, _ := crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
+	addr0 := crypto.PubkeyToAddress(key0.PublicKey)
+	deployTransactor := bind.NewKeyedTransactor(key0)
+	backend := backends.NewSimulatedBackend(core.GenesisAlloc{addr0: {Balance: big.NewInt(1000000000)}}, 10000000)
+	addr, _, _, err := shyft_contracts.DeployValidSigners(deployTransactor, backend)
+	if err != nil {
+		t.Errorf("Deploy Valid Signers Contract failed ", err)
+	}
+	t.Log("add is ", addr)
+	stack, err := New(testNodeConfig())
+	if err != nil {
+		t.Fatalf("failed to create protocol stack: %v", err)
+	}
+	result := stack.CheckContractAdminStatus(addr0, backend)
+
+	if result != false {
+		t.Errorf("result mismatch: have %s, want %s", result, false)
 	}
 }

@@ -309,7 +309,7 @@ func (n *Node) CheckContractAdminStatusWrapper(conn *ethclient.Client) func(addr
 	}
 }
 
-func (n *Node) CheckContractAdminStatus(addr common.Address, conn *ethclient.Client) bool {
+func (n *Node) CheckContractAdminStatus(addr common.Address, conn bind.ContractCaller) bool {
 	signerContract, err := shyft_contracts.NewValidSignersCaller(common.HexToAddress(n.config.WhisperSignersContract), conn)
 	if err != nil {
 		log.Info("Signer contract not initialized")
