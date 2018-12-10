@@ -31,8 +31,6 @@ import (
 	"github.com/ShyftNetwork/go-empyrean/whisper/shhclient"
 	"github.com/ShyftNetwork/go-empyrean/whisper/whisperv6"
 
-	"github.com/ShyftNetwork/go-empyrean/signer/core"
-
 	"net"
 	"os"
 	"path/filepath"
@@ -371,6 +369,12 @@ func pos(slice []string, address common.Address) int {
 	return -1
 }
 
+// Copied from signer/core/api.go to avoid cyclic dependency in testing
+func SignHash(data []byte) ([]byte, string) {
+	msg := fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(data), data)
+	return crypto.Keccak256([]byte(msg)), msg
+}
+
 func whisperMessageReceiver(sub ethereum.Subscription, messages chan *whisperv6.Message, whispChan chan string, whisperKeys func(addr common.Address) bool) {
 	for {
 		select {
@@ -386,7 +390,7 @@ func whisperMessageReceiver(sub ethereum.Subscription, messages chan *whisperv6.
 			}
 			var sighex = hexutil.Bytes(sigByteArray)
 			sighex[64] -= 27
-			msgHash, _ := core.SignHash(hexutil.Bytes(blockHash))
+			msgHash, _ := SignHash(hexutil.Bytes(blockHash))
 			pubKey, err := crypto.SigToPub(hexutil.Bytes(msgHash), sighex)
 			if err != nil {
 				log.Error("SigToPub err", "err", err)
