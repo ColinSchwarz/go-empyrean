@@ -127,7 +127,8 @@ func (t *BlockTest) Run() error {
 	} else {
 		engine = ethash.NewShared()
 	}
-	chain, err := core.NewBlockChain(db, shyftdb, nil, config, engine, vm.Config{}, nil)
+
+	chain, err := core.NewBlockChain(db, shyftdb, &core.CacheConfig{TrieCleanLimit: 0}, config, engine, vm.Config{}, nil)
 	if err != nil {
 		return err
 	}

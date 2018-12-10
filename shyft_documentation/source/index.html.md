@@ -23,6 +23,32 @@ Our goal was to avoid compromising the integrity of Geth and simply extend exist
 
 In order to successfully accept a PR the maintainers of the Shyft repositories require that this document must be updated, reflecting the changes made in the PR. Along with the documentation, we ask that contributors provide the NOTE:SHYFT. The tag could should contain a brief on the modified code. This will help with releases further down the road as we document what breaking changes have been made along the journey.
 
+#### Linting
+In order to successfully have a PR merged into go-empyrean your changes need to pass our TravisCI that runs every PR. One of the builds in Travis tests that you've properly linted your code.
+The linter we are using is `gometalinter` from the following [repo.](https://github.com/alecthomas/gometalinter) The TravisCI runs the below commands:
+
+> Gometalinter commands
+```
+gometalinter ./... --vendor --tests --deadline=2m --disable-all --enable=goimports --enable=varcheck --enable=vet --enable=gofmt --enable=misspell --exclude=core/genesis.go --exclude=eth/handler_test.go --exclude=eth/downloader/api.go --enable=goconst --min-occurrences=6
+gometalinter --vendor --tests --deadline=10m --disable-all --exclude=ethdb/shyft_database.go --enable=gosimple ./...
+gometalinter --vendor --tests --deadline=10m --disable-all --enable=unconvert ./...
+```
+The above commands will indicate which files need to be properly linted. Often its as simple as running the below command:
+
+`gofmt -w <filename>`
+
+`goimports -w <filename>`
+
+However, sometimes you need to simplify parts of your code, for example:
+```
+A range of the form:
+	for _ = range v {...}
+will be simplified to:
+	for range v {...}
+``` 
+
+Learn more through the official godocs [here.](https://golang.org/cmd/gofmt/)
+
 # Setup
 
 ### Dependencies

@@ -27,7 +27,6 @@ ethash/
 /build/bin/
 /geth*.zip
 
-
 # travis
 profile.tmp
 profile.cov
@@ -49,8 +48,6 @@ profile.cov
 /dashboard/assets/package-lock.json
 
 **/yarn-error.log
-$HOME
-
 # Remove Shyft Data
 shyftData/*
 shyft-cli/web3/token_test/node_modules

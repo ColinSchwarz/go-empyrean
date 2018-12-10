@@ -67,6 +67,3 @@ before_script:
 script:
 - go run build/ci.go install
 - go run build/ci.go test -coverage $TEST_PACKAGES
-
-
-

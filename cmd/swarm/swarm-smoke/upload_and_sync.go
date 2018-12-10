@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"crypto/md5"
 	crand "crypto/rand"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -37,20 +38,15 @@ import (
 	cli "gopkg.in/urfave/cli.v1"
 )
 
-func generateEndpoints(scheme string, cluster string, from int, to int) {
+func generateEndpoints(scheme string, cluster string, app string, from int, to int) {
 	if cluster == "prod" {
-		cluster = ""
-	} else if cluster == "local" {
 		for port := from; port <= to; port++ {
-			endpoints = append(endpoints, fmt.Sprintf("%s://localhost:%v", scheme, port))
+			endpoints = append(endpoints, fmt.Sprintf("%s://%v.swarm-gateways.net", scheme, port))
 		}
-		return
 	} else {
-		cluster = cluster + "."
-	}
-
-	for port := from; port <= to; port++ {
-		endpoints = append(endpoints, fmt.Sprintf("%s://%v.%sswarm-gateways.net", scheme, port, cluster))
+		for port := from; port <= to; port++ {
+			endpoints = append(endpoints, fmt.Sprintf("%s://%s-%v-%s.stg.swarm-gateways.net", scheme, app, port, cluster))
+		}
 	}
 
 	if includeLocalhost {
@@ -59,9 +55,12 @@ func generateEndpoints(scheme string, cluster string, from int, to int) {
 }
 
 func cliUploadAndSync(c *cli.Context) error {
-	defer func(now time.Time) { log.Info("total time", "time", time.Since(now), "size (kb)", filesize) }(time.Now())
+	log.PrintOrigins(true)
+	log.Root().SetHandler(log.LvlFilterHandler(log.Lvl(verbosity), log.StreamHandler(os.Stdout, log.TerminalFormat(true))))
 
-	generateEndpoints(scheme, cluster, from, to)
+	defer func(now time.Time) { log.Info("total time", "time", time.Since(now), "kb", filesize) }(time.Now())
+
+	generateEndpoints(scheme, cluster, appName, from, to)
 
 	log.Info("uploading to " + endpoints[0] + " and syncing")
 
@@ -112,7 +111,10 @@ func fetch(hash string, endpoint string, original []byte, ruid string) error {
 	time.Sleep(3 * time.Second)
 
 	log.Trace("http get request", "ruid", ruid, "api", endpoint, "hash", hash)
-	res, err := http.Get(endpoint + "/bzz:/" + hash + "/")
+	client := &http.Client{Transport: &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}}
+	res, err := client.Get(endpoint + "/bzz:/" + hash + "/")
 	if err != nil {
 		log.Warn(err.Error(), "ruid", ruid)
 		return err
