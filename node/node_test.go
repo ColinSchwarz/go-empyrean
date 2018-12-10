@@ -629,7 +629,7 @@ func TestCheckContractAdminStatus(t *testing.T) {
 	backend := backends.NewSimulatedBackend(core.GenesisAlloc{addr0: {Balance: big.NewInt(1000000000)}}, 10000000)
 	addr, _, _, err := shyft_contracts.DeployValidSigners(deployTransactor, backend)
 	if err != nil {
-		t.Errorf("Deploy Valid Signers Contract failed ", err)
+		t.Errorf("Deploy Valid Signers Contract failed %+v \n", err)
 	}
 	t.Log("add is ", addr)
 	stack, err := New(testNodeConfig())
@@ -639,6 +639,6 @@ func TestCheckContractAdminStatus(t *testing.T) {
 	result := stack.CheckContractAdminStatus(addr0, backend)
 
 	if result != false {
-		t.Errorf("result mismatch: have %s, want %s", result, false)
+		t.Errorf("result mismatch: have %v, want %v", result, false)
 	}
 }
