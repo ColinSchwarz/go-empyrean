@@ -28,10 +28,10 @@ var (
 )
 
 // ValidSignersABI is the input ABI used to generate the binding from.
-const ValidSignersABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_signer\",\"type\":\"address\"}],\"name\":\"removeSigner\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_signer\",\"type\":\"address\"}],\"name\":\"isValidSigner\",\"outputs\":[{\"name\":\"result\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_new_signer\",\"type\":\"address\"}],\"name\":\"addValidSigner\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"}]"
+const ValidSignersABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_signer\",\"type\":\"address\"}],\"name\":\"removeSigner\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"}],\"name\":\"signers\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_signer\",\"type\":\"address\"}],\"name\":\"isValidSigner\",\"outputs\":[{\"name\":\"result\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_new_signer\",\"type\":\"address\"}],\"name\":\"addValidSigner\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"}]"
 
 // ValidSignersBin is the compiled bytecode used for deploying new contracts.
-const ValidSignersBin = `0x608060405234801561001057600080fd5b5060018054600160a060020a0319163317905561020b806100326000396000f3fe60806040526004361061005b577c010000000000000000000000000000000000000000000000000000000060003504630e316ab781146100605780638da5cb5b14610095578063d5f50582146100c6578063de8ee8171461010d575b600080fd5b34801561006c57600080fd5b506100936004803603602081101561008357600080fd5b5035600160a060020a0316610140565b005b3480156100a157600080fd5b506100aa610177565b60408051600160a060020a039092168252519081900360200190f35b3480156100d257600080fd5b506100f9600480360360208110156100e957600080fd5b5035600160a060020a0316610186565b604080519115158252519081900360200190f35b34801561011957600080fd5b506100936004803603602081101561013057600080fd5b5035600160a060020a03166101a4565b600154600160a060020a031633141561005b57600160a060020a0381166000908152602081905260409020805460ff191690555b50565b600154600160a060020a031681565b600160a060020a031660009081526020819052604090205460ff1690565b600154600160a060020a031633141561005b57600160a060020a0381166000908152602081905260409020805460ff1916600117905561017456fea165627a7a723058204c3826c0149ce63e78e417db3a1ec89f1010254ca15f7594dd835908f85163df0029`
+const ValidSignersBin = `0x608060405234801561001057600080fd5b5060018054600160a060020a0319163317905561025e806100326000396000f3fe608060405260043610610066577c010000000000000000000000000000000000000000000000000000000060003504630e316ab7811461006b578063736c0d5b146100a05780638da5cb5b146100e7578063d5f5058214610118578063de8ee8171461014b575b600080fd5b34801561007757600080fd5b5061009e6004803603602081101561008e57600080fd5b5035600160a060020a031661017e565b005b3480156100ac57600080fd5b506100d3600480360360208110156100c357600080fd5b5035600160a060020a03166101b5565b604080519115158252519081900360200190f35b3480156100f357600080fd5b506100fc6101ca565b60408051600160a060020a039092168252519081900360200190f35b34801561012457600080fd5b506100d36004803603602081101561013b57600080fd5b5035600160a060020a03166101d9565b34801561015757600080fd5b5061009e6004803603602081101561016e57600080fd5b5035600160a060020a03166101f7565b600154600160a060020a031633141561006657600160a060020a0381166000908152602081905260409020805460ff191690555b50565b60006020819052908152604090205460ff1681565b600154600160a060020a031681565b600160a060020a031660009081526020819052604090205460ff1690565b600154600160a060020a031633141561006657600160a060020a0381166000908152602081905260409020805460ff191660011790556101b256fea165627a7a7230582073b1eaa21d2311bb5de12a9dc57e77891967b3c7128736977b190ec6a50294d80029`
 
 // DeployValidSigners deploys a new Ethereum contract, binding an instance of ValidSigners to it.
 func DeployValidSigners(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *ValidSigners, error) {
@@ -238,6 +238,32 @@ func (_ValidSigners *ValidSignersSession) Owner() (common.Address, error) {
 // Solidity: function owner() constant returns(address)
 func (_ValidSigners *ValidSignersCallerSession) Owner() (common.Address, error) {
 	return _ValidSigners.Contract.Owner(&_ValidSigners.CallOpts)
+}
+
+// Signers is a free data retrieval call binding the contract method 0x736c0d5b.
+//
+// Solidity: function signers( address) constant returns(bool)
+func (_ValidSigners *ValidSignersCaller) Signers(opts *bind.CallOpts, arg0 common.Address) (bool, error) {
+	var (
+		ret0 = new(bool)
+	)
+	out := ret0
+	err := _ValidSigners.contract.Call(opts, out, "signers", arg0)
+	return *ret0, err
+}
+
+// Signers is a free data retrieval call binding the contract method 0x736c0d5b.
+//
+// Solidity: function signers( address) constant returns(bool)
+func (_ValidSigners *ValidSignersSession) Signers(arg0 common.Address) (bool, error) {
+	return _ValidSigners.Contract.Signers(&_ValidSigners.CallOpts, arg0)
+}
+
+// Signers is a free data retrieval call binding the contract method 0x736c0d5b.
+//
+// Solidity: function signers( address) constant returns(bool)
+func (_ValidSigners *ValidSignersCallerSession) Signers(arg0 common.Address) (bool, error) {
+	return _ValidSigners.Contract.Signers(&_ValidSigners.CallOpts, arg0)
 }
 
 // AddValidSigner is a paid mutator transaction binding the contract method 0xde8ee817.

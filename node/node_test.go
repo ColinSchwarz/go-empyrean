@@ -18,6 +18,7 @@ package node
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -622,23 +623,48 @@ func TestWhisperChannels(t *testing.T) {
 	}
 }
 
+var (
+	key0, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
+	key1, _ = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
+	key2, _ = crypto.HexToECDSA("49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee")
+	addr0   = crypto.PubkeyToAddress(key0.PublicKey)
+	addr1   = crypto.PubkeyToAddress(key1.PublicKey)
+	addr2   = crypto.PubkeyToAddress(key2.PublicKey)
+)
+
 func TestCheckContractAdminStatus(t *testing.T) {
-	key0, _ := crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
-	addr0 := crypto.PubkeyToAddress(key0.PublicKey)
 	deployTransactor := bind.NewKeyedTransactor(key0)
-	backend := backends.NewSimulatedBackend(core.GenesisAlloc{addr0: {Balance: big.NewInt(1000000000)}}, 10000000)
-	addr, _, _, err := shyft_contracts.DeployValidSigners(deployTransactor, backend)
+	backend := backen ds.NewSimulatedBackend(core.GenesisAlloc{addr0: {Balance: big.NewInt(1000000000)}}, 10000000)
+	addr, _, contractInstance, err := shyft_contracts.DeployValidSigners(deployTransactor, backend)
 	if err != nil {
 		t.Errorf("Deploy Valid Signers Contract failed ", err)
 	}
 	t.Log("add is ", addr)
-	stack, err := New(testNodeConfig())
-	if err != nil {
-		t.Fatalf("failed to create protocol stack: %v", err)
-	}
-	result := stack.CheckContractAdminStatus(addr0, backend)
+
+	result := CheckContractAdminStatus(addr0, backend, addr)
 
 	if result != false {
 		t.Errorf("result mismatch: have %s, want %s", result, false)
+	}
+
+	callOpts := bind.CallOpts{
+		Pending: true,
+	}
+	res, err := contractInstance.Signers(&callOpts, addr0)
+	fmt.Println("res is ", res)
+
+	contractInstance.AddValidSigner(deployTransactor, addr0)
+
+	res, _ = contractInstance.Signers(&callOpts, addr0)
+	fmt.Println("res is ", res)
+
+	result = CheckContractAdminStatus(addr0, backend, addr)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("result is ", result)
+	if result != true {
+		t.Errorf("result mismatch: have %s, want %s", result, true)
 	}
 }

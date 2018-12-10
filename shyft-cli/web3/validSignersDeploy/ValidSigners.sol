@@ -2,7 +2,7 @@ pragma solidity ^0.5.1;
 
 contract ValidSigners {
 
-    mapping (address => bool) signers;
+    mapping (address => bool) public signers;
     address public owner;
 
     constructor() public {

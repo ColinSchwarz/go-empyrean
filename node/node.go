@@ -278,7 +278,7 @@ func (n *Node) Start() error {
 			authMethodContract := n.smartContractAvailable(n.config.WhisperSignersContract, conn)
 			fmt.Printf("Contract Available %+v \n", authMethodContract)
 			if authMethodContract {
-				go whisperMessageReceiver(sub, messages, n.config.WhisperChannel, n.CheckContractAdminStatusWrapper(conn)) // call contract code
+				go whisperMessageReceiver(sub, messages, n.config.WhisperChannel, CheckContractAdminStatusWrapper(conn, common.HexToAddress(n.config.WhisperSignersContract))) // call contract code
 			} else {
 				// Until Testnet deployment and for testing purposes the endpoint
 				// scan be tested by passing in public signing keys as a cmd line flag
@@ -303,29 +303,24 @@ func (n *Node) dialIPC() *ethclient.Client {
 	return conn
 }
 
-func (n *Node) CheckContractAdminStatusWrapper(conn *ethclient.Client) func(address common.Address) bool {
+func CheckContractAdminStatusWrapper(conn *ethclient.Client, validSignersAddress common.Address) func(address common.Address) bool {
 	return func(addr common.Address) bool {
-		return n.CheckContractAdminStatus(addr, conn)
+		return CheckContractAdminStatus(addr, conn, validSignersAddress)
 	}
 }
 
-func (n *Node) CheckContractAdminStatus(addr common.Address, conn bind.ContractCaller) bool {
-	signerContract, err := shyft_contracts.NewValidSignersCaller(common.HexToAddress(n.config.WhisperSignersContract), conn)
+func CheckContractAdminStatus(addr common.Address, conn bind.ContractCaller, validSignersAddress common.Address) bool {
+	signerContract, err := shyft_contracts.NewValidSignersCaller(validSignersAddress, conn)
 	if err != nil {
 		log.Info("Signer contract not initialized")
 		return false
 	}
-	//signerContract, err := shyft_contracts.NewSignerCaller(common.HexToAddress(n.config.WhisperSignersContract), conn)
-	session := &shyft_contracts.ValidSignersCallerSession{
-		Contract: signerContract,
-		CallOpts: bind.CallOpts{
-			Pending: true,
-		},
-	}
-	result, err := session.IsValidSigner(addr)
+
+	result, err := signerContract.IsValidSigner(&bind.CallOpts{Pending: true}, addr)
 	if err != nil {
-		log.Info("No response from contract %+v \n", err)
+		fmt.Println("No response from contract %+v \n", err)
 	}
+	fmt.Println("result inside check is ", result)
 	return result
 }
 
